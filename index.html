@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mobile Calculator</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-bg: #1a1a2e;
+            --secondary-bg: #16213e;
+            --display-bg: #0f3460;
+            --button-bg: #1e2a4a;
+            --button-hover: #2a3a62;
+            --operator-bg: #ff7f50;
+            --operator-hover: #ff6347;
+            --equals-bg: #4cc9f0;
+            --equals-hover: #38b6db;
+            --clear-bg: #f72585;
+            --clear-hover: #e5177e;
+            --text-color: #e2e2e2;
+            --display-text: #ffffff;
+            --shadow-color: rgba(0, 0, 0, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: var(--primary-bg);
+            color: var(--text-color);
+            touch-action: manipulation;
+        }
+
+        .calculator {
+            width: 100%;
+            max-width: 400px;
+            height: 80vh;
+            min-height: 600px;
+            max-height: 700px;
+            background-color: var(--secondary-bg);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px var(--shadow-color);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            margin: 20px;
+        }
+
+        .display {
+            flex: 1;
+            padding: 25px 20px;
+            text-align: right;
+            background-color: var(--display-bg);
+            color: var(--display-text);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            min-height: 150px;
+        }
+
+        .calculation-history {
+            font-size: 1.2rem;
+            min-height: 24px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 10px;
+            word-break: break-all;
+            overflow-y: auto;
+            max-height: 50px;
+        }
+
+        .current-input {
+            font-size: 3rem;
+            font-weight: 300;
+            word-break: break-all;
+            overflow-y: auto;
+        }
+
+        .buttons {
+            flex: 2;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            padding: 20px;
+            min-height: 400px;
+        }
+
+        button {
+            border: none;
+            outline: none;
+            font-size: 1.8rem;
+            cursor: pointer;
+            background-color: var(--button-bg);
+            color: var(--text-color);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 6px var(--shadow-color);
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        .operator {
+            background-color: var(--operator-bg);
+            color: white;
+            font-weight: 500;
+        }
+
+        .equals {
+            background-color: var(--equals-bg);
+            color: white;
+            font-weight: 500;
+        }
+
+        .clear, .delete {
+            background-color: var(--clear-bg);
+            color: white;
+        }
+
+        .span-2 {
+            grid-column: span 2;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 500px) {
+            .calculator {
+                height: 90vh;
+                min-height: unset;
+                max-height: unset;
+                border-radius: 0;
+                margin: 0;
+            }
+            
+            .display {
+                min-height: 120px;
+            }
+            
+            .current-input {
+                font-size: 2.5rem;
+            }
+            
+            button {
+                font-size: 1.5rem;
+            }
+        }
+
+        @media (max-height: 700px) {
+            .calculator {
+                height: 95vh;
+            }
+            
+            .buttons {
+                gap: 8px;
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="calculator">
+        <div class="display">
+            <div class="calculation-history" id="calculation-history"></div>
+            <div class="current-input" id="current-input">0</div>
+        </div>
+        
+        <div class="buttons">
+            <button class="clear span-2">AC</button>
+            <button class="delete"><i class="fas fa-backspace"></i></button>
+            <button class="operator">÷</button>
+            
+            <button class="number">7</button>
+            <button class="number">8</button>
+            <button class="number">9</button>
+            <button class="operator">×</button>
+            
+            <button class="number">4</button>
+            <button class="number">5</button>
+            <button class="number">6</button>
+            <button class="operator">-</button>
+            
+            <button class="number">1</button>
+            <button class="number">2</button>
+            <button class="number">3</button>
+            <button class="operator">+</button>
+            
+            <button class="number span-2">0</button>
+            <button class="number">.</button>
+            <button class="equals">=</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentInputElement = document.getElementById('current-input');
+            const calculationHistoryElement = document.getElementById('calculation-history');
+            
+            // Buttons
+            const numberButtons = document.querySelectorAll('.number');
+            const operatorButtons = document.querySelectorAll('.operator');
+            const equalsButton = document.querySelector('.equals');
+            const clearButton = document.querySelector('.clear');
+            const deleteButton = document.querySelector('.delete');
+            
+            // Calculator state
+            let currentInput = '0';
+            let previousInput = '';
+            let operation = undefined;
+            let resetScreen = false;
+            
+            // Update calculator display
+            function updateDisplay() {
+                currentInputElement.textContent = formatNumber(currentInput);
+                calculationHistoryElement.textContent = previousInput + (operation ? ' ' + operation : '');
+                
+                // Auto-scale font size for large numbers
+                if (currentInput.length > 8) {
+                    currentInputElement.style.fontSize = `${Math.max(2, 3 - (currentInput.length - 8) * 0.15)}rem`;
+                } else {
+                    currentInputElement.style.fontSize = '3rem';
+                }
+            }
+            
+            // Format number with commas
+            function formatNumber(number) {
+                if (number.includes('.')) {
+                    const parts = number.split('.');
+                    return parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",") + '.' + parts[1];
+                }
+                return number.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+            }
+            
+            // Append number to current input
+            function appendNumber(number) {
+                if (currentInput === '0' || resetScreen) {
+                    currentInput = number;
+                    resetScreen = false;
+                } else if (currentInput.replace(/,/g, '').length < 15) {
+                    currentInput += number;
+                }
+                updateDisplay();
+            }
+            
+            // Add decimal point
+            function addDecimal() {
+                if (resetScreen) {
+                    currentInput = '0.';
+                    resetScreen = false;
+                    updateDisplay();
+                    return;
+                }
+                if (currentInput.includes('.')) return;
+                currentInput += '.';
+                updateDisplay();
+            }
+            
+            // Choose operation
+            function chooseOperation(op) {
+                if (currentInput === '') return;
+                if (previousInput !== '') {
+                    compute();
+                }
+                operation = op;
+                previousInput = currentInput;
+                currentInput = '';
+                resetScreen = false;
+                updateDisplay();
+            }
+            
+            // Perform calculation
+            function compute() {
+                let computation;
+                const prev = parseFloat(previousInput.replace(/,/g, ''));
+                const current = parseFloat(currentInput.replace(/,/g, ''));
+                
+                if (isNaN(prev) || isNaN(current)) return;
+                
+                switch (operation) {
+                    case '+':
+                        computation = prev + current;
+                        break;
+                    case '-':
+                        computation = prev - current;
+                        break;
+                    case '×':
+                        computation = prev * current;
+                        break;
+                    case '÷':
+                        computation = prev / current;
+                        break;
+                    default:
+                        return;
+                }
+                
+                currentInput = computation.toString();
+                operation = undefined;
+                previousInput = '';
+                resetScreen = true;
+                updateDisplay();
+            }
+            
+            // Clear calculator
+            function clearCalculator() {
+                currentInput = '0';
+                previousInput = '';
+                operation = undefined;
+                updateDisplay();
+            }
+            
+            // Delete last character
+            function deleteLastChar() {
+                if (currentInput.length === 1 || (currentInput.length === 2 && currentInput.startsWith('-'))) {
+                    currentInput = '0';
+                } else {
+                    currentInput = currentInput.slice(0, -1);
+                }
+                updateDisplay();
+            }
+            
+            // Event listeners
+            numberButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    if (button.textContent === '.') {
+                        addDecimal();
+                    } else {
+                        appendNumber(button.textContent);
+                    }
+                });
+                
+                // Touch feedback
+                button.addEventListener('touchstart', () => {
+                    button.style.transform = 'scale(0.95)';
+                });
+                
+                button.addEventListener('touchend', () => {
+                    button.style.transform = 'scale(1)';
+                });
+            });
+            
+            operatorButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    chooseOperation(button.textContent);
+                });
+            });
+            
+            equalsButton.addEventListener('click', compute);
+            clearButton.addEventListener('click', clearCalculator);
+            deleteButton.addEventListener('click', deleteLastChar);
+            
+            // Keyboard support
+            document.addEventListener('keydown', function(e) {
+                if (e.key >= 0 && e.key <= 9) {
+                    appendNumber(e.key);
+                } else if (e.key === '.') {
+                    addDecimal();
+                } else if (e.key === '+' || e.key === '-' || e.key === '*' || e.key === '/') {
+                    chooseOperation(e.key === '*' ? '×' : e.key === '/' ? '÷' : e.key);
+                } else if (e.key === 'Enter' || e.key === '=') {
+                    compute();
+                } else if (e.key === 'Backspace') {
+                    deleteLastChar();
+                } else if (e.key === 'Escape') {
+                    clearCalculator();
+                }
+            });
+            
+            // Prevent zooming on mobile
+            document.addEventListener('gesturestart', function(e) {
+                e.preventDefault();
+            });
+            
+            // Initial display update
+            updateDisplay();
+        });
+    </script>
+</body>
+</html>
